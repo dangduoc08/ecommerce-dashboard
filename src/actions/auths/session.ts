@@ -1,10 +1,11 @@
 'use server'
 
 import { cookies } from 'next/headers'
-import { IApiResponse, IAuthSession } from '../interface'
-import { v1, FetchError } from '../fetch';
+import { IApiResponse, IAuthSession } from '@/actions/interface'
+import { v1, FetchError } from '@/actions/fetch';
 
-export default async function session(prevSessionState: IApiResponse<IAuthSession>, formData: FormData) {
+export default async function session(prevSessionState: IApiResponse<IAuthSession> & { shouldComponentRender: boolean }, formData: FormData) {
+  const shouldComponentRender = !prevSessionState.shouldComponentRender
   try {
     const username = formData.get('username')
     const password = formData.get('password')
@@ -20,7 +21,10 @@ export default async function session(prevSessionState: IApiResponse<IAuthSessio
       cookieStore.set('access_token', `${access.type} ${access.token}`, { httpOnly: true, maxAge: access.exp })
     }
 
-    return resp
+    return {
+      ...resp,
+      shouldComponentRender
+    }
   } catch (_err) {
     const err = _err as FetchError
     return {
@@ -28,6 +32,7 @@ export default async function session(prevSessionState: IApiResponse<IAuthSessio
       error: err.error,
       message: err.message,
       messages: err.messages,
+      shouldComponentRender
     }
   }
 } 

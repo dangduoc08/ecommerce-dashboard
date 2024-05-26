@@ -2,7 +2,7 @@ import Container from '@mui/material/Container'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Trang Quản Trị',
+  title: 'Đổi Mật Khẩu',
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

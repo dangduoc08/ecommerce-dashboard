@@ -17,22 +17,22 @@ declare module '@mui/material/styles' {
 let theme = createTheme({
   palette: {
     primary: {
-      main: '#264653',
+      main: '#4156a1',
     },
     secondary: {
-      main: '#f4a261',
+      main: '#c5cbe3',
     },
     error: {
-      main: '#e76f51',
+      main: '#f13c1f',
     },
     warning: {
-      main: '#e9c46a',
+      main: '#d89922',
     },
     success: {
-      main: '#2a9d8f',
+      main: '#316a41',
     },
     info: {
-      main: '#118ab2',
+      main: '#efe2ba',
     },
     bg: {
       main: '#efefef',

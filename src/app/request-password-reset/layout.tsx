@@ -2,10 +2,10 @@ import Container from '@mui/material/Container'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Trang Quản Trị',
+  title: 'Quên Mật Khẩu',
 }
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function ForgotPasswordPageLayout({ children }: { children: React.ReactNode }) {
   return (
     <Container maxWidth={false} sx={{ backgroundColor: 'bg.main', height: '100vh' }}>
       {children}

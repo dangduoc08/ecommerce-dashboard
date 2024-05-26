@@ -35,7 +35,7 @@ export default class Fetch {
   }
 
   private isRequestSuccess(status: number): boolean {
-    return status / 200 >= 1 && status / 200 < 1.5
+    return (status / 200 >= 1 && status / 200 < 1.5) || (status / 300 >= 1 && status / 300 < 1.5)
   }
 
 
@@ -56,8 +56,15 @@ export default class Fetch {
           },
         }
       )
-        .then(resp => resp.json())
-        .then(data => resolve(data))
+        .then(async (resp) => {
+          const respJSON = await resp.json()
+          const { code, error, message, messages } = respJSON
+          if (!this.isRequestSuccess(resp.status)) {
+            throw new FetchError(message, code, error, messages)
+          }
+
+          resolve(respJSON)
+        })
         .catch(error => reject(error))
     })
   }
@@ -103,8 +110,15 @@ export default class Fetch {
           },
         }
       )
-        .then(resp => resp.json())
-        .then(data => resolve(data))
+        .then(async (resp) => {
+          const respJSON = await resp.json()
+          const { code, error, message, messages } = respJSON
+          if (!this.isRequestSuccess(resp.status)) {
+            throw new FetchError(message, code, error, messages)
+          }
+
+          resolve(respJSON)
+        })
         .catch(error => reject(error))
     })
   }
@@ -123,8 +137,15 @@ export default class Fetch {
           },
         }
       )
-        .then(resp => resp.json())
-        .then(data => resolve(data))
+        .then(async (resp) => {
+          const respJSON = await resp.json()
+          const { code, error, message, messages } = respJSON
+          if (!this.isRequestSuccess(resp.status)) {
+            throw new FetchError(message, code, error, messages)
+          }
+
+          resolve(respJSON)
+        })
         .catch(error => reject(error))
     })
   }
@@ -142,8 +163,15 @@ export default class Fetch {
           },
         }
       )
-        .then(resp => resp.json())
-        .then(data => resolve(data))
+        .then(async (resp) => {
+          const respJSON = await resp.json()
+          const { code, error, message, messages } = respJSON
+          if (!this.isRequestSuccess(resp.status)) {
+            throw new FetchError(message, code, error, messages)
+          }
+
+          resolve(respJSON)
+        })
         .catch(error => reject(error))
     })
   }

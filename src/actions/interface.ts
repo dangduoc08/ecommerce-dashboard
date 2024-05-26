@@ -21,7 +21,14 @@ export interface IAuthSessionToken {
 export interface IAuthSession {
   access: IAuthSessionToken;
   refresh: IAuthSessionToken;
-  user: IUser;
+}
+
+export interface IAuthRequestPasswordReset {
+  requested: boolean;
+}
+
+export interface IAuthRecoverResponse {
+  recovered: boolean;
 }
 
 export interface IUser {
