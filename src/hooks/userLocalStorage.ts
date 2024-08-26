@@ -15,6 +15,11 @@ function parseToValue<T>(key: string, value: string | null): T {
 }
 
 export const useLocalStorage = <T>(key: string, initialValue?: T): [T, <Z>(value: Z, exp?: number) => void, () => void] => {
+  if (typeof window === 'undefined') {
+    const fn = () => { }
+    return [initialValue as T, fn, fn]
+  }
+
   if (initialValue && (localStorage.getItem(key) === undefined || localStorage.getItem(key) === '' || localStorage.getItem(key) === null)) {
     localStorage.setItem(key, JSON.stringify({ __data: initialValue, __exp: -1 }))
   }

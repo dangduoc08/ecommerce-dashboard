@@ -30,23 +30,57 @@ export default function AdminPage() {
   const [nextFormState, sessionAction] = useFormState(session, formState)
   const { dispatch } = useContext(SnackbarContext)
   const [showPassword, setShowPassword] = useState(false)
+  const [isPrefill, setIsPrefill] = useState(false)
+  const router = useRouter()
   const [_, setRefreshTokenLocalStorage] = useLocalStorage('refresh_token')
-  const [adminPrefillLocalStorage, setAdminPrefillLocalStorage] = useLocalStorage('admin_prefill', {
-    isPrefill: false,
-    username: '',
-    password: '',
-  })
   const [formData, setFormData] = useState({
     username: {
-      value: adminPrefillLocalStorage?.username ?? '',
+      value: '',
       error: '',
     },
     password: {
-      value: adminPrefillLocalStorage?.password ?? '',
+      value: '',
       error: '',
     },
   })
-  const router = useRouter()
+
+  const [adminPrefillLocalStorage, setAdminPrefillLocalStorage] = useLocalStorage('admin_prefill', {
+    isPrefill,
+    username: formData.username.value,
+    password: formData.password.value,
+  })
+
+  useEffect(() => {
+    formData.username.value = adminPrefillLocalStorage?.username ?? ''
+    formData.password.value = adminPrefillLocalStorage?.password ?? ''
+    setFormData({ ...formData })
+    setIsPrefill(adminPrefillLocalStorage.isPrefill)
+  }, [])
+
+  useEffect(() => {
+    if (nextFormState.messages && nextFormState.messages?.length > 0) {
+      nextFormState.messages?.forEach((message) => {
+        formData[message.field as keyof typeof formData].error = message.reason
+      })
+      setFormData({ ...formData })
+    } else {
+      resetErrorMessages()
+    }
+
+    if (!!nextFormState.code && !!nextFormState.message) {
+      dispatch({ type: 'error', message: nextFormState.message })
+      return
+    }
+
+    if (nextFormState.data?.refresh?.token) {
+      setRefreshTokenLocalStorage<string>(
+        `${nextFormState.data?.refresh?.type ?? ''} ${nextFormState.data.refresh.token}`.trim(),
+        nextFormState.data?.refresh?.exp ?? 0 * 1000,
+      )
+
+      router.push('/dashboard')
+    }
+  }, [nextFormState.shouldComponentRender])
 
   const resetErrorMessages = () => {
     formData.username.error = ''
@@ -71,50 +105,15 @@ export default function AdminPage() {
   }
 
   const handlePrefill = (e: SyntheticEvent, checked: boolean) => {
-    if (checked) {
-      setAdminPrefillLocalStorage({
-        username: formData.username.value,
-        password: formData.password.value,
-        isPrefill: checked,
-      })
-      return
-    }
-
     setAdminPrefillLocalStorage({
-      username: '',
-      password: '',
-      isPrefill: false,
+      username: checked ? formData.username.value : '',
+      password: checked ? formData.password.value : '',
+      isPrefill: checked,
     })
+    setIsPrefill(checked)
+
     return
   }
-
-  useEffect(() => {
-    if (nextFormState.messages && nextFormState.messages?.length > 0) {
-      nextFormState.messages?.forEach((message) => {
-        formData[message.field as keyof typeof formData].error = message.reason
-      })
-      setFormData({ ...formData })
-    } else {
-      resetErrorMessages()
-    }
-
-    if (!!nextFormState.code && !!nextFormState.message) {
-      dispatch({ type: 'error', message: nextFormState.message })
-      return
-    } else if (!!nextFormState.data?.access) {
-      router.push('/dashboard')
-      return
-    }
-
-    if (nextFormState.data?.refresh?.token) {
-      setRefreshTokenLocalStorage<string>(
-        `${nextFormState.data?.refresh?.type ?? ''} ${
-          nextFormState.data.refresh.token
-        }`.trim(),
-        nextFormState.data?.refresh?.exp ?? 0 * 1000,
-      )
-    }
-  }, [nextFormState.shouldComponentRender])
 
   return (
     <Container maxWidth={'xs'}>
@@ -191,7 +190,7 @@ export default function AdminPage() {
             <FormControlLabel
               control={<Checkbox value="remember" color="primary" />}
               label="Ghi nhớ thông tin"
-              checked={adminPrefillLocalStorage?.isPrefill ?? false}
+              checked={isPrefill}
               onChange={handlePrefill}
             />
           </Grid>
