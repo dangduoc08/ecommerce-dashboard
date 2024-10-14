@@ -18,22 +18,21 @@ import Checkbox from '@mui/material/Checkbox'
 import Grid from '@mui/material/Unstable_Grid2'
 import Typography from '@mui/material/Typography'
 import FormButton from '@/components/FormButton'
-import session from '@/actions/auths/session'
+import signin, { IAuthSigninResponse } from '@/actions/auths/signin'
 import { SnackbarContext } from '@/contexts/Snackbar/SnackbarProvider'
-import { IApiResponse, IAuthSession } from '@/actions/interface'
+import { IApiResponse } from '@/actions/fetch'
 import { useLocalStorage } from '@/hooks/userLocalStorage'
+import { LocalStorageName, Path } from '@/constants'
 
 export default function AdminPage() {
-  const formState: IApiResponse<IAuthSession> & { shouldComponentRender: boolean } = {
-    shouldComponentRender: false,
+  const signinFormState: IApiResponse<IAuthSigninResponse> = {
+    data: null,
+    error: null,
   }
-  const [nextFormState, sessionAction] = useFormState(session, formState)
-  const { dispatch } = useContext(SnackbarContext)
+  
   const [showPassword, setShowPassword] = useState(false)
   const [isPrefill, setIsPrefill] = useState(false)
-  const router = useRouter()
-  const [_, setRefreshTokenLocalStorage] = useLocalStorage('refresh_token')
-  const [formData, setFormData] = useState({
+  const [signinFormData, setSinginFormData] = useState({
     username: {
       value: '',
       error: '',
@@ -44,57 +43,76 @@ export default function AdminPage() {
     },
   })
 
-  const [adminPrefillLocalStorage, setAdminPrefillLocalStorage] = useLocalStorage('admin_prefill', {
-    isPrefill,
-    username: formData.username.value,
-    password: formData.password.value,
-  })
+  const [nextSigninFormState, signinAction] = useFormState(
+    (prevState: IApiResponse<IAuthSigninResponse>, formdata: FormData) => {
+      const signinReq = {
+        body: {
+          username: formdata.get('username')?.toString() ?? '',
+          password: formdata.get('password')?.toString() ?? '',
+        },
+      }
+      return signin(prevState, signinReq)
+    },
+    signinFormState,
+  )
+
+  const { dispatch } = useContext(SnackbarContext)
+
+  const router = useRouter()
+
+  const [adminPrefillLocalStorage, setAdminPrefillLocalStorage] = useLocalStorage(
+    LocalStorageName.AdminPrefill,
+    {
+      isPrefill,
+      username: signinFormData.username.value,
+      password: signinFormData.password.value,
+    },
+  )
 
   useEffect(() => {
-    formData.username.value = adminPrefillLocalStorage?.username ?? ''
-    formData.password.value = adminPrefillLocalStorage?.password ?? ''
-    setFormData({ ...formData })
-    setIsPrefill(adminPrefillLocalStorage.isPrefill)
+    const { username = '', password = '', isPrefill } = adminPrefillLocalStorage
+
+    signinFormData.username.value = username
+    signinFormData.password.value = password
+    setSinginFormData({ ...signinFormData })
+    setIsPrefill(isPrefill)
   }, [])
 
   useEffect(() => {
-    if (nextFormState.messages && nextFormState.messages?.length > 0) {
-      nextFormState.messages?.forEach((message) => {
-        formData[message.field as keyof typeof formData].error = message.reason
+    const { message, error, data } = nextSigninFormState
+
+    if (Array.isArray(message) && message?.length > 0) {
+      message?.forEach((msg) => {
+        signinFormData[msg.field as keyof typeof signinFormData].error = msg.reason
       })
-      setFormData({ ...formData })
+      setSinginFormData({ ...signinFormData })
     } else {
       resetErrorMessages()
     }
 
-    if (!!nextFormState.code && !!nextFormState.message) {
-      dispatch({ type: 'error', message: nextFormState.message })
+    if (!!error && !!message && typeof message == 'string') {
+      dispatch({ type: 'error', message })
       return
     }
 
-    if (nextFormState.data?.refresh?.token) {
-      setRefreshTokenLocalStorage<string>(
-        `${nextFormState.data?.refresh?.type ?? ''} ${nextFormState.data.refresh.token}`.trim(),
-        nextFormState.data?.refresh?.exp ?? 0 * 1000,
-      )
-
-      router.push('/dashboard')
+    if (data?.refresh?.token && data?.refresh?.name && data?.refresh?.type && data?.refresh?.exp) {
+      router.push(Path.DashBoard)
     }
-  }, [nextFormState.shouldComponentRender])
+  }, [nextSigninFormState.data, nextSigninFormState.error])
 
   const resetErrorMessages = () => {
-    formData.username.error = ''
-    formData.password.error = ''
-    setFormData({ ...formData })
+    signinFormData.username.error = ''
+    signinFormData.password.error = ''
+    setSinginFormData({ ...signinFormData })
   }
 
   const handleOnInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     const { isPrefill } = adminPrefillLocalStorage
 
-    formData[name as keyof typeof formData].error = ''
-    formData[name as keyof typeof formData].value = value
-    setFormData({ ...formData })
+    signinFormData[name as keyof typeof signinFormData].error = ''
+    signinFormData[name as keyof typeof signinFormData].value = value
+    setSinginFormData({ ...signinFormData })
 
     if (isPrefill) {
       setAdminPrefillLocalStorage({
@@ -106,8 +124,8 @@ export default function AdminPage() {
 
   const handlePrefill = (e: SyntheticEvent, checked: boolean) => {
     setAdminPrefillLocalStorage({
-      username: checked ? formData.username.value : '',
-      password: checked ? formData.password.value : '',
+      username: checked ? signinFormData.username.value : '',
+      password: checked ? signinFormData.password.value : '',
       isPrefill: checked,
     })
     setIsPrefill(checked)
@@ -140,7 +158,7 @@ export default function AdminPage() {
           </Grid>
         </Grid>
       </Box>
-      <Box action={sessionAction} component="form" sx={{ width: '100%' }}>
+      <Box action={signinAction} component="form" sx={{ width: '100%' }}>
         <Grid container rowSpacing={2}>
           <Grid
             sx={{
@@ -149,10 +167,10 @@ export default function AdminPage() {
             xs={12}
           >
             <TextField
-              error={!!formData.username.error}
-              helperText={formData.username.error}
+              error={!!signinFormData.username.error}
+              helperText={signinFormData.username.error}
               onChange={handleOnInputChange}
-              value={formData.username.value}
+              value={signinFormData.username.value}
               name="username"
               required
               fullWidth
@@ -166,10 +184,10 @@ export default function AdminPage() {
             xs={12}
           >
             <TextField
-              error={!!formData.password.error}
-              helperText={formData.password.error}
+              error={!!signinFormData.password.error}
+              helperText={signinFormData.password.error}
               onChange={handleOnInputChange}
-              value={formData.password.value}
+              value={signinFormData.password.value}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -182,6 +200,7 @@ export default function AdminPage() {
               name="password"
               required
               fullWidth
+              autoComplete="on"
               type={showPassword ? 'text' : 'password'}
               label="Mật Khẩu"
             />
@@ -201,7 +220,7 @@ export default function AdminPage() {
             xs={12}
           >
             <FormButton
-              disabled={!!formData.username.error || !!formData.password.error}
+              disabled={!!signinFormData.username.error || !!signinFormData.password.error}
               variant="contained"
               fullWidth
             >

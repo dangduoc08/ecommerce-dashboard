@@ -1,31 +1,40 @@
 'use server'
 
 import { redirect, RedirectType } from 'next/navigation'
-import { IApiResponse, IAuthRecoverResponse } from '@/actions/interface'
-import { v1, FetchError } from '@/actions/fetch';
+import { cookies, headers } from 'next/headers'
+import { v1, FetchError, IApiResponse } from '@/actions/fetch'
 
-const sleep = (t: number) => new Promise(r => setTimeout(r, t))
+export interface IAuthRecoverBody {
+  password: string
+  confirm_password: string
+}
 
-export default async function recover(prevSessionState: IApiResponse<IAuthRecoverResponse> & { shouldComponentRender: boolean; token?: string }, formData: FormData) {
-  const shouldComponentRender = !prevSessionState.shouldComponentRender
+export interface IAuthRecoverResponse {
+  recovered: boolean
+}
+
+export default async function recover(
+  prevState: IApiResponse<IAuthRecoverResponse>,
+  recoverReq?: { body: IAuthRecoverBody; headers?: HeadersInit },
+): Promise<IApiResponse<IAuthRecoverResponse>> {
   let recovered = false
 
   try {
-    const password = formData.get('password')
-    const confirmPassword = formData.get('confirmPassword')
-    if (password !== confirmPassword) {
+    const password = recoverReq?.body.password
+    const confirm_password = recoverReq?.body.confirm_password
+
+    if (password !== confirm_password) {
       return {
-        code: "422",
-        error: "Unprocessable Entity",
-        messages: [
+        data: prevState.data,
+        code: '422',
+        error: 'Unprocessable Entity',
+        message: [
           {
-            "field": "confirmPassword",
-            "namespace": "data.username",
-            "reason": "Không khớp với mật khẩu"
-          }
+            field: 'confirm_password',
+            namespace: 'data.username',
+            reason: 'Không khớp với mật khẩu',
+          },
         ],
-        token: prevSessionState.token,
-        shouldComponentRender
       }
     }
 
@@ -33,26 +42,52 @@ export default async function recover(prevSessionState: IApiResponse<IAuthRecove
       password,
     }
 
-    const resp = await v1.patch<IApiResponse<IAuthRecoverResponse>>('/admins/auths/recover', { data }, { 'recover_token': prevSessionState.token || '' })
-    recovered = resp.data?.recovered ?? false
+    const headersList = headers()
+    const ref = headersList.get('referer')
+    let recoverToken = {}
+    if (ref) {
+      const { searchParams } = new URL(ref)
+      const name = searchParams.get('name')
+      const type = searchParams.get('type')
+      const token = searchParams.get('token')
+      if (name) {
+        recoverToken = {
+          [name]: `${type} ${token}`,
+        }
+      }
+    }
 
+    const recoverRes = await v1.patch<IApiResponse<IAuthRecoverResponse>>(
+      '/admins/auths/recover',
+      { data },
+      recoverToken,
+    )
+
+    if (recoverRes.data) {
+      recovered = recoverRes.data?.recovered ?? false
+
+      return {
+        ...recoverRes,
+        error: prevState.error || null,
+      }
+    }
 
     return {
-      ...resp,
-      token: prevSessionState.token,
-      shouldComponentRender
+      data: prevState.data || null,
+      error: prevState.error || null,
     }
   } catch (_err) {
     const err = _err as FetchError
+
     return {
-      code: err.code,
-      error: err.error,
-      message: err.message,
-      messages: err.messages,
-      token: prevSessionState.token,
-      shouldComponentRender
+      ...err,
+      data: prevState.data || null,
     }
   } finally {
-    redirect('/admin', RedirectType.replace)
+    if (recovered) {
+      const cookie = cookies()
+      cookie.getAll().forEach((cookieValue) => cookie.delete(cookieValue.name))
+      redirect('/admin', RedirectType.replace)
+    }
   }
 }

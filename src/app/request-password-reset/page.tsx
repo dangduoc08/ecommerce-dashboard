@@ -14,23 +14,36 @@ import Typography from '@mui/material/Typography'
 import FormButton from '@/components/FormButton'
 import requestPasswordReset from '@/actions/auths/requestPasswordReset'
 import { SnackbarContext } from '@/contexts/Snackbar/SnackbarProvider'
-import { IApiResponse, IAuthRequestPasswordReset } from '@/actions/interface'
+import { IApiResponse } from '@/actions/fetch'
+import { IAuthRequestPasswordResponse } from '@/actions/auths/requestPasswordReset'
 
 export default function RequestPasswordResetPage() {
-  const formState: IApiResponse<IAuthRequestPasswordReset> & {
-    shouldComponentRender: boolean
-  } = {
-    shouldComponentRender: false,
+  const formState: IApiResponse<IAuthRequestPasswordResponse> = {
+    data: null,
+    error: null,
   }
-  const [nextFormState, requestPasswordResetAction] = useFormState(requestPasswordReset, formState)
+
+  const [nextRequestPasswordResetFormState, requestPasswordResetAction] = useFormState(
+    (prevState: IApiResponse<IAuthRequestPasswordResponse>, formdata: FormData) => {
+      const requestPasswordResetReq = {
+        body: {
+          user_identity: formdata.get('user_identity')?.toString() ?? '',
+        },
+      }
+      return requestPasswordReset(prevState, requestPasswordResetReq)
+    },
+    formState,
+  )
   const { dispatch } = useContext(SnackbarContext)
 
   useEffect(() => {
-    if (nextFormState.messages && nextFormState.messages?.[0]?.reason) {
-      dispatch({ type: 'error', message: nextFormState.messages[0].reason })
+    const { message, error, data } = nextRequestPasswordResetFormState
+
+    if (!!error && !!message && typeof message == 'string') {
+      dispatch({ type: 'error', message })
       return
     }
-  }, [nextFormState.shouldComponentRender])
+  }, [nextRequestPasswordResetFormState.error])
 
   const Form = () => {
     return (
@@ -147,6 +160,8 @@ export default function RequestPasswordResetPage() {
   }
 
   return (
-    <Container maxWidth={'xs'}>{nextFormState?.data?.requested ? <Success /> : <Form />}</Container>
+    <Container maxWidth={'xs'}>
+      {nextRequestPasswordResetFormState?.data?.requested ? <Success /> : <Form />}
+    </Container>
   )
 }

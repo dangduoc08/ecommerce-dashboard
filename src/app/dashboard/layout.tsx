@@ -1,7 +1,13 @@
+'use client'
+
+import { useState, useEffect, useContext, ChangeEvent, SyntheticEvent } from 'react'
 import Link from 'next/link'
 import Container from '@mui/material/Container'
 import MenuIcon from '@mui/icons-material/Menu'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
+import DashboardIcon from '@mui/icons-material/Dashboard'
+import SettingsIcon from '@mui/icons-material/Settings'
+import SellIcon from '@mui/icons-material/Sell'
 import Box from '@mui/material/Box'
 import Toolbar from '@mui/material/Toolbar'
 import List from '@mui/material/List'
@@ -14,27 +20,44 @@ import Typography from '@mui/material/Typography'
 import Divider from '@mui/material/Divider'
 import IconButton from '@mui/material/IconButton'
 import Drawer from '@mui/material/Drawer'
+import { v1, FetchError } from '@/actions/fetch'
+import me from '@/actions/auths/me'
 
-export interface IDashBoardLayout {
-  children: React.ReactNode
-}
-
-export default function DashBoardLayout({ children }: IDashBoardLayout) {
+export default async function DashBoardLayout({ children }: { children: React.ReactNode }) {
   const navs = [
     {
       href: '/dashboard',
       name: 'Tổng quan',
-      icon: <MenuIcon />,
+      icon: <DashboardIcon />,
     },
     {
       href: '/dashboard/product',
       name: 'Sản phẩm',
+      icon: <SellIcon />,
     },
     {
       href: '/dashboard/settings',
       name: 'Cấu hình',
+      icon: <SettingsIcon />,
     },
   ]
+
+  // const checkAuth = async () => {
+  //   await v1.get('/admins/auths/me', { method: 'GET', credentials: 'include',   'mode': 'cors', })
+  // }
+
+  // useEffect(() => {
+  //   me(false)
+  // }, [])
+
+  // let flag = true
+  // if (flag) {
+  //   const { shouldComponentRender } = await me(flag)
+  //   flag = shouldComponentRender || false
+  // }
+
+  // let data = await fetch('https://api.vercel.app/blog')
+  // let posts = await data.json()
 
   const renderList = (nav: any) => (
     <ListItem disablePadding key={nav.href}>
@@ -50,19 +73,10 @@ export default function DashBoardLayout({ children }: IDashBoardLayout) {
   return (
     <Container maxWidth={false} sx={{ backgroundColor: 'bg.light', height: '100vh' }}>
       <Box sx={{ marginLeft: '240px', height: '100vh' }}>
-        <AppBar color="primary" position="fixed">
+        <AppBar sx={{ width: `calc(100% - ${240}px)` }} color="primary" position="fixed">
           <Toolbar>
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              // onClick={handleDrawerOpen}
-              edge="start"
-              // sx={{ mr: 2, ...(open && { display: 'none' }) }}
-            >
-              <MenuIcon />
-            </IconButton>
             <Typography variant="h6" noWrap component="div">
-              Persistent drawer
+              Tổng Quan
             </Typography>
           </Toolbar>
         </AppBar>
@@ -81,11 +95,18 @@ export default function DashBoardLayout({ children }: IDashBoardLayout) {
         open
         anchor="left"
       >
-        <div>
+        <Toolbar
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            px: [1],
+          }}
+        >
           <IconButton>
             <ChevronLeftIcon />
           </IconButton>
-        </div>
+        </Toolbar>
         <Divider />
         <List>{navs.map(renderList)}</List>
       </Drawer>

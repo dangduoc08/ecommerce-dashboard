@@ -1,35 +1,45 @@
 'use server'
 
-import { headers } from "next/headers";
-import { IApiResponse, IAuthRequestPasswordReset } from '@/actions/interface'
-import { v1, FetchError } from '@/actions/fetch';
+import { headers } from 'next/headers'
+import { v1, FetchError, IApiResponse } from '@/actions/fetch'
 
-export default async function requestPasswordReset(prevSessionState: IApiResponse<IAuthRequestPasswordReset> & { shouldComponentRender: boolean }, formData: FormData) {
-  const shouldComponentRender = !prevSessionState.shouldComponentRender
+export interface IAuthRequestPasswordResetBody {
+  user_identity: string
+}
+
+export interface IAuthRequestPasswordResponse {
+  requested: boolean
+}
+
+export default async function requestPasswordReset(
+  prevState: IApiResponse<IAuthRequestPasswordResponse>,
+  requestPasswordResetReq?: { body: IAuthRequestPasswordResetBody; headers?: HeadersInit },
+) {
   try {
-    const headersList = headers();
-    const domain = headersList.get("x-forwarded-host") || "";
-    const proto = headersList.get("x-forwarded-proto") || "";
-
-    const user_identity = formData.get('user_identity')
+    const userIdentity = requestPasswordResetReq?.body?.user_identity
     const data = {
-      user_identity,
+      user_identity: userIdentity,
     }
+    const headersList = headers()
 
-    const resp = await v1.patch<IApiResponse<IAuthRequestPasswordReset>>('/admins/auths/request_password_reset', { data }, { Origin: `${proto}://${domain}` })
+    const resp = await v1.post<IApiResponse<IAuthRequestPasswordResponse>>(
+      '/admins/auths/request_password_reset',
+      { data },
+      {
+        Origin: headersList.get('origin')?.toString() ?? '',
+        ...requestPasswordResetReq?.headers,
+      },
+    )
 
     return {
       ...resp,
-      shouldComponentRender
+      error: prevState.error || null,
     }
   } catch (_err) {
     const err = _err as FetchError
     return {
-      code: err.code,
-      error: err.error,
-      message: err.message,
-      messages: err.messages,
-      shouldComponentRender
+      ...err,
+      data: prevState.data || null,
     }
   }
-} 
+}

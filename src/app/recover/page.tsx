@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useContext, ChangeEvent } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { useFormState } from 'react-dom'
 import Container from '@mui/material/Container'
 import Avatar from '@mui/material/Avatar'
@@ -15,64 +14,76 @@ import LockOutlinedIcon from '@mui/icons-material/Lock'
 import Grid from '@mui/material/Unstable_Grid2'
 import Typography from '@mui/material/Typography'
 import FormButton from '@/components/FormButton'
-import recover from '@/actions/auths/recover'
 import { SnackbarContext } from '@/contexts/Snackbar/SnackbarProvider'
-import { IApiResponse, IAuthRecoverResponse } from '@/actions/interface'
+import { IApiResponse } from '@/actions/fetch'
+import recover, { IAuthRecoverResponse } from '@/actions/auths/recover'
 
-export default function AdminPage() {
-  const searchParams = useSearchParams()
-  const formState: IApiResponse<IAuthRecoverResponse> & {
-    shouldComponentRender: boolean
-    token?: string
-  } = {
-    shouldComponentRender: false,
-    token: `${searchParams.get('type')} ${searchParams.get('token')}`,
+export default function RecoverPage() {
+  const recoverFormState: IApiResponse<IAuthRecoverResponse> = {
+    data: null,
+    error: null,
   }
-  const [nextFormState, recoverAction] = useFormState(recover, formState)
-  const { dispatch } = useContext(SnackbarContext)
+
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [formData, setFormData] = useState({
+  const [recoverFormData, setRecoverFormData] = useState({
     password: {
       value: '',
       error: '',
     },
-    confirmPassword: {
+    confirm_password: {
       value: '',
       error: '',
     },
   })
 
+  const [nextRecoverFormState, recoverAction] = useFormState(
+    (prevState: IApiResponse<IAuthRecoverResponse>, formdata: FormData) => {
+      const recoverReq = {
+        body: {
+          password: formdata.get('password')?.toString() ?? '',
+          confirm_password: formdata.get('confirm_password')?.toString() ?? '',
+        },
+      }
+
+      return recover(prevState, recoverReq)
+    },
+    recoverFormState,
+  )
+
+  const { dispatch } = useContext(SnackbarContext)
+
   const resetErrorMessages = () => {
-    formData.password.error = ''
-    formData.confirmPassword.error = ''
-    setFormData({ ...formData })
+    recoverFormData.password.error = ''
+    recoverFormData.confirm_password.error = ''
+    setRecoverFormData({ ...recoverFormData })
   }
 
   const handleOnInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     resetErrorMessages()
 
-    formData[name as keyof typeof formData].value = value
-    setFormData({ ...formData })
+    recoverFormData[name as keyof typeof recoverFormData].value = value
+    setRecoverFormData({ ...recoverFormData })
   }
 
   useEffect(() => {
-    if (nextFormState.messages && nextFormState.messages?.length > 0) {
-      nextFormState.messages?.forEach((message) => {
-        formData[message.field as keyof typeof formData].error = message.reason
+    const { message, error } = nextRecoverFormState
+
+    if (Array.isArray(message) && message?.length > 0) {
+      message?.forEach((msg) => {
+        recoverFormData[msg.field as keyof typeof recoverFormData].error = msg.reason
       })
-      setFormData({ ...formData })
+      setRecoverFormData({ ...recoverFormData })
     } else {
       resetErrorMessages()
     }
 
-    if (!!nextFormState.code && !!nextFormState.message) {
-      dispatch({ type: 'error', message: nextFormState.message })
+    if (!!error && !!message && typeof message == 'string') {
+      dispatch({ type: 'error', message })
       return
     }
-
-  }, [nextFormState.shouldComponentRender])
+  }, [nextRecoverFormState.data, nextRecoverFormState.error])
 
   return (
     <Container maxWidth={'xs'}>
@@ -108,10 +119,10 @@ export default function AdminPage() {
             xs={12}
           >
             <TextField
-              error={!!formData.password.error}
-              helperText={formData.password.error}
+              error={!!recoverFormData.password.error}
+              helperText={recoverFormData.password.error}
               onChange={handleOnInputChange}
-              value={formData.password.value}
+              value={recoverFormData.password.value}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -135,10 +146,10 @@ export default function AdminPage() {
             xs={12}
           >
             <TextField
-              error={!!formData.confirmPassword.error}
-              helperText={formData.confirmPassword.error}
+              error={!!recoverFormData.confirm_password.error}
+              helperText={recoverFormData.confirm_password.error}
               onChange={handleOnInputChange}
-              value={formData.confirmPassword.value}
+              value={recoverFormData.confirm_password.value}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -148,7 +159,7 @@ export default function AdminPage() {
                   </InputAdornment>
                 ),
               }}
-              name="confirmPassword"
+              name="confirm_password"
               required
               fullWidth
               type={showConfirmPassword ? 'text' : 'password'}
@@ -162,7 +173,9 @@ export default function AdminPage() {
             xs={12}
           >
             <FormButton
-              disabled={!!formData.password.error || !!formData.confirmPassword.error}
+              disabled={
+                !!recoverFormData.password.error || !!recoverFormData.confirm_password.error
+              }
               variant="contained"
               fullWidth
             >
