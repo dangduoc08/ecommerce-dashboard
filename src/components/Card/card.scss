@@ -1,0 +1,26 @@
+.card-component {
+  display: inline-block;
+  background: linear-gradient(135deg, rgba(255, 235, 59, 0.2), rgba(251, 192, 45, 0.2));
+  border: 1px solid black;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+  &__content {
+    display: flex;
+    align-items: center;
+  }
+
+  &__icon {
+    padding: 10px;
+  }
+
+  &__title {
+    font-size: 20px;
+    padding-right: 10px;
+  }
+
+  &__desc {
+    color: grey;
+    padding-left: 10px;
+  }
+}

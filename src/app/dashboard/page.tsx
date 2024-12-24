@@ -1,8 +1,5 @@
+import './dashboard.scss'
 
-
-export default function DashBoard() {
-
-  return(
-    <div>This is dashboard</div>
-  )
+export default function DashBoardPage() {
+  return <div className="dashboard-page">This is dashboard</div>
 }

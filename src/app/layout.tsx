@@ -1,19 +1,14 @@
-'use client'
-
-import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter'
-import CssBaseline from '@mui/material/CssBaseline'
-import ThemeProvider from './ThemeProvider'
+import './root.scss'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html>
+      {/* <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+        rel="stylesheet"
+      ></link> */}
       <meta name="viewport" content="initial-scale=1, width=device-width" />
-      <body>
-        <AppRouterCacheProvider>
-          <CssBaseline />
-          <ThemeProvider>{children}</ThemeProvider>
-        </AppRouterCacheProvider>
-      </body>
+      <body>{children}</body>
     </html>
   )
 }

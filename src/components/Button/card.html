@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modern Configuration Page</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      /* Font chữ hiện đại */
+      background-color: #eef2f3;
+      /* Màu nền nhẹ nhàng */
+      margin: 0;
+      /* Xóa khoảng cách mặc định */
+      padding: 20px;
+      /* Padding cho body */
+    }
+
+    h1 {
+      text-align: center;
+      /* Căn giữa tiêu đề chính */
+      margin-bottom: 30px;
+      /* Khoảng cách dưới tiêu đề chính */
+      color: #333;
+      /* Màu chữ tiêu đề chính */
+    }
+
+    .card-container {
+      display: grid;
+      /* Sử dụng grid layout */
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      /* Định nghĩa layout grid */
+      gap: 20px;
+      /* Khoảng cách giữa các card */
+      max-width: 1200px;
+      /* Độ rộng tối đa cho container */
+      margin: 0 auto;
+      /* Căn giữa container */
+    }
+
+    .card-component {
+      background: white;
+      /* Màu nền trắng cho card */
+      border-radius: 12px;
+      /* Góc tròn */
+      padding: 20px;
+      /* Khoảng cách bên trong */
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      /* Hiệu ứng đổ bóng sắc nét */
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      /* Hiệu ứng chuyển động */
+      position: relative;
+      /* Để thêm hiệu ứng chồng */
+      overflow: hidden;
+      /* Xóa các phần bên ngoài card */
+    }
+
+    .card-component::before {
+      content: '';
+      position: absolute;
+      /* Vị trí tuyệt đối */
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 235, 59, 0.2), rgba(251, 192, 45, 0.2));
+      /* Gradient nhẹ cho card */
+      z-index: 1;
+      /* Đưa xuống dưới nội dung */
+      transition: opacity 0.3s ease;
+      /* Hiệu ứng chuyển động */
+    }
+
+    .card-component:hover::before {
+      opacity: 1;
+      /* Hiệu ứng chồng khi hover */
+    }
+
+    .card-component:hover {
+      transform: translateY(-5px);
+      /* Nâng card lên khi hover */
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+      /* Đổ bóng mạnh hơn khi hover */
+    }
+
+    .card-component__title {
+      font-size: 22px;
+      /* Kích thước chữ tiêu đề */
+      margin: 0 0 10px;
+      /* Khoảng cách dưới tiêu đề */
+      color: #333;
+      /* Màu chữ tiêu đề */
+      z-index: 2;
+      /* Đưa lên trên nội dung */
+    }
+
+    .card-component__description {
+      font-size: 14px;
+      /* Kích thước chữ mô tả */
+      color: #666;
+      /* Màu chữ cho mô tả */
+      margin-bottom: 20px;
+      /* Khoảng cách dưới mô tả */
+      z-index: 2;
+      /* Đưa lên trên nội dung */
+    }
+
+    .card-component__button {
+      background-color: #fbc02d;
+      /* Màu nền nút */
+      color: #fff;
+      /* Màu chữ nút */
+      border: none;
+      /* Không có border */
+      border-radius: 5px;
+      /* Góc tròn cho nút */
+      padding: 12px 18px;
+      /* Padding cho nút */
+      cursor: pointer;
+      /* Con trỏ khi hover vào nút */
+      transition: background-color 0.3s, transform 0.3s;
+      /* Hiệu ứng chuyển động cho nút */
+      z-index: 2;
+      /* Đưa lên trên nội dung */
+    }
+
+    .card-component__button:hover {
+      background-color: #ffd54f;
+      /* Màu nền khi hover vào nút */
+      transform: translateY(-2px);
+      /* Nâng nút lên khi hover */
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Modern Configuration Page</h1>
+
+  <div class="card-container">
+    <div class="card-component">
+      <h2 class="card-component__title">Cấu Hình Email</h2>
+      <p class="card-component__description">Thiết lập thông tin email để nhận thông báo và liên lạc với khách hàng.</p>
+      <button class="card-component__button">Chỉnh sửa</button>
+    </div>
+
+    <div class="card-component">
+      <h2 class="card-component__title">Phân Quyền Người Dùng</h2>
+      <p class="card-component__description">Quản lý quyền truy cập cho các nhân viên và người dùng khác trong hệ thống.
+      </p>
+      <button class="card-component__button">Chỉnh sửa</button>
+    </div>
+
+    <div class="card-component">
+      <h2 class="card-component__title">Thông Tin Cửa Hàng</h2>
+      <p class="card-component__description">Cập nhật thông tin về cửa hàng, bao gồm tên, địa chỉ và số điện thoại.</p>
+      <button class="card-component__button">Chỉnh sửa</button>
+    </div>
+  </div>
+
+</body>
+
+</html>
